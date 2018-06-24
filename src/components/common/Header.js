@@ -1,12 +1,17 @@
 import React from 'react';
 import logo from './logo.png';
 import "./Header.css";
+import Search from './Search';
+import { Link } from 'react-router-dom';
 
 const Header = () => {
   return (
     <div className="Header"> 
-      <img src={logo} alt="Logo" className="Header-logo" />
+      <Link to="/" >
+        <img src={logo} alt="Logo" className="Header-logo" />
+      </Link>
 
+      <Search />
     </div>
   );
 }

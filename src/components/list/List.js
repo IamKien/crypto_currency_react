@@ -1,7 +1,10 @@
 import React from 'react';
 import { handleResponse } from '../../helper';
 import { API_URL } from '../../config';
-import './Table.css';
+import Loading from '../common/Loading'
+import Table from './Table';
+import Pagination from './Pagination';
+
 
 class List extends React.Component {
   constructor(){
@@ -11,20 +14,35 @@ class List extends React.Component {
       loading: false,
       currencies: [],
       error: null,
+      totalPages: 0,
+      page: 1,
     };
+
+    this.handlePaginationClick = this.handlePaginationClick.bind(this);
   }
 
   componentDidMount(){
+    this.fetchCurrencies()
+  }
+
+  fetchCurrencies(){
     this.setState({ loading: true });
     // USE Batik `` not '' for fetch
 
-    fetch(`${API_URL}/cryptocurrencies?page=1&perPage=20`)
+    const {page} = this.state;
+
+    fetch(`${API_URL}/cryptocurrencies?page=${page}&perPage=10`)
     .then(
       handleResponse
     )
     .then((data) => {
+      const { currencies, totalPages} = data;
+
       this.setState({ 
-        currencies: data.currencies, 
+        currencies, 
+        //currencies: currencies same as above , 
+        totalPages,
+        //totalPages: totalPages, same as above
         loading: false})
     })
     .catch((error) => {
@@ -32,58 +50,54 @@ class List extends React.Component {
         error: error.errorMessage, 
         loading: false})
     });
+
   }
 
-  renderChangePercent(percent){
-    if(percent > 0){
-      return <span className="percent-raise"> {percent} % &uarr; </span>
-    }else if (percent < 0){
-      return <span className="percent-fallen"> {percent} % &darr; </span>
+  handlePaginationClick(direction){
+    //We use Let instead of Const because we resign its value
+    let nextPage = this.state.page;
+
+    if(direction === 'next'){
+      nextPage++;
     }else{
-      return <span> {percent} % </span>
+      nextPage--;
     }
+
+    this.setState({ page: nextPage }, () => {
+      //use a callack to call fetchCurrencies
+      //inside setState so we use the updated value
+      this.fetchCurrencies();
+    }
+
+
+    );
   }
 
 
   render(){
+    const {currencies, page, totalPages } = this.state;
 
+    // Render Loading Component if loading is true
     if(this.state.loading){
-      return <div> Loading... </div>
+      return <div className="loading-container"> <Loading /> </div>
+    }
+    // Render Error Component if error is occur when fetching data
+    if(this.state.error){
+      return <div className="error">{this.state.error} </div>
     }
 
     return(
-      <div className="Table-container"> 
-        <table className="Table"> 
-          <thead className="Table-head">
-            <tr>
-              <th>Cryptocurrencies</th>
-              <th>Price</th>
-              <th>Market Cap</th>
-              <th>24H Change</th>
-            </tr>
-          </thead>
-          <tbody className="able-body">
-            {this.state.currencies.map((currency) => (
-              <tr key={currency.id}>
-               <td>
-                <span className="Table-rank ">  {currency.rank} </span>
-                  {currency.name}
-               </td>
-               <td className="Table-dollar">
-                $ {currency.price}
-               </td>
-               <td className="Table-dollar">
-                $ {currency.marketCap}
-               </td>
-               <td className="Table-dollar">
-                $ {this.renderChangePercent(currency.percentChange24h)}
-               </td>
-              </tr>
+      <div>
+        <Table currencies={currencies}
+        />
 
-            ))}
+        <Pagination 
+          page={page}
+          totalPages={totalPages}
+          //we use this so we can pass it to Pagination Component
+          handlePaginationClick={this.handlePaginationClick}
+        />
 
-          </tbody>
-        </table>
       </div>
     )
   }
