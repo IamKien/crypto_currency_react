@@ -21,8 +21,26 @@ class Detail extends React.Component {
     };
   }
 
+
+  //componentDidMount is only called once,
+  //If you try to reload the page, it won't reload
+  //because its already mounted.
   componentDidMount(){
     const currencyId = this.props.match.params.id;
+
+    this.fetchCurrency(currencyId);
+  }
+
+  componentWillReceiveProps(nextProps){
+    if(this.props.location.pathname !== nextProps.location.pathname){
+      //Get new currency ID from URL
+      const newCurrencyId = nextProps.match.params.id;
+
+      this.fetchCurrency(newCurrencyId);
+    }
+  }
+
+  fetchCurrency(currencyId){
 
     this.setState( { loading: true });
 
